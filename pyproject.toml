@@ -5,7 +5,7 @@ description = "Python Bindings for Trading API for exbet.io"
 authors = ["Python Development Team <py@exbet.io>"]
 homepage = "https://github.com/exbet/python-exbetapi"
 repository = "https://github.com/exbet/python-exbetapi"
-documentation = "python-exbetapi.rtfd.io"
+documentation = "https://python-exbetapi.rtfd.io"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/exbet/python-exbetapi/issues"
