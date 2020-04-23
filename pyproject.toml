@@ -1,0 +1,56 @@
+[tool.poetry]
+name = "exbetapi"
+version = "0.1.0"
+description = "Python Bindings for Trading API for exbet.io"
+authors = ["Fabian Schuh <fabian@exbet.io>"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+requests = "^2.22.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+pre-commit = "^1.18"
+tox = "^3.7"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+[tool.black]
+line-length = 120
+target-version = ['py37']
+
+[tool.coverage.run]
+include = ["*/exbetapi/*"]
+branch = true
+omit = ["tests/*", ".tox/*", ".eggs/*"]
+
+[tool.coverage.report]
+ignore_errors = true
+show_missing = true
+include = ["*/src/*"]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise ImportError",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "except ImportError:",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if sys.version > '3':",
+    "SECP256K1_MODULE"
+]
+
+[tool.pylint.'MESSAGES CONTROL']
+max-line-length = 120
+disable = ["C0330"]
+
+["setup.cfg".flake8]
+ignore = "F821,E302,E501,W503,F401"
+max-line-length = 120
+inline-quotes = "double"
+exclude = ".tox,build"
