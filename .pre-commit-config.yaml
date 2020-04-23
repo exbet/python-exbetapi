@@ -22,12 +22,11 @@ repos:
   rev: stable
   hooks:
    - id: black
-     language_version: python3
 
-- repo: https://github.com/PyCQA/pylint
-  rev: master
-  hooks:
-   - id: pylint
+#- repo: https://github.com/pre-commit/mirrors-pylint
+#  rev: 'master'
+#  hooks:
+#  -   id: pylint
 
 - repo: https://github.com/pre-commit/pygrep-hooks
   rev: master
@@ -40,7 +39,7 @@ repos:
   hooks:
    - id: python-safety-dependencies-check
 
-- repo: https://github.com/PyCQA/bandit
-  rev: master
-  hooks:
-   - id: bandit
+#- repo: https://github.com/PyCQA/bandit
+#  rev: master
+#  hooks:
+#   - id: bandit
