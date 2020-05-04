@@ -36,7 +36,14 @@ class ExbetAPI:
         resp = requests.post(
             self.BASEURL + endpoint, json=payload, headers=self._headers()
         )
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except requests.HTTPError:
+            try:
+                t = resp.json()
+            except Exception:
+                t = resp.text
+            raise APIError(t)
         try:
             ret = resp.json()
         except Exception:  # pragma: no cover
@@ -48,7 +55,14 @@ class ExbetAPI:
         """ Private method to send a GET from API resource
         """
         resp = requests.get(self.BASEURL + endpoint, headers=self._headers())
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except requests.HTTPError:
+            try:
+                t = resp.json()
+            except Exception:
+                t = resp.text
+            raise APIError(t)
         try:
             ret = resp.json()
         except Exception:  # pragma: no cover
@@ -199,8 +213,7 @@ class ExbetAPI:
         resp = self._post("bet/cancel", dict(bet_id=bet_id))
         if wait:  # pragma: no cover
             self._wait_for_task(resp.get("task_id"))
-            return
-        return
+        return resp
 
     def cancel_bets(self, bet_ids: list, wait=False) -> None:
         """
@@ -213,8 +226,7 @@ class ExbetAPI:
         )
         if wait:  # pragma: no cover
             self._wait_for_task(resp.get("task_id"))
-            return
-        return
+        return resp
 
     def edit_bet(self, *args, **kwargs):
         """ Not yet implemented!
@@ -259,14 +271,14 @@ class ExbetAPI:
                 betting_market_id=betting_market_id,
                 backer_multiplier=backer_multiplier,
                 persistent=persistent,
-                stake=stake,
+                backer_stake=stake,
             ),
         )
         if wait:  # pragma: no cover
             return self._obtain_task_results(self._wait_for_task(resp.get("task_id")))[
                 0
             ]
-        return None
+        return resp
 
     def place_bets(self, bets: list, wait=False) -> list:
         """ place multiple bets
@@ -293,7 +305,7 @@ class ExbetAPI:
                 betting_market_id=bet[0],
                 back_or_lay=bet[1],
                 backer_multiplier=bet[2],
-                stake=self._parse_stake(bet[3]),
+                backer_stake=self._parse_stake(bet[3]),
                 persistent=True,
             )
             if len(bet) > 4:
@@ -302,7 +314,7 @@ class ExbetAPI:
         resp = self._post("bet/place_many", dict(place_bets=parsed_bets))
         if wait:  # pragma: no cover
             return self._obtain_task_results(self._wait_for_task(resp.get("task_id")))
-        return None
+        return resp
 
     #
     # Find

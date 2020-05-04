@@ -198,7 +198,7 @@ def test_placebet(mock, api):
             betting_market_id="1.25.50449",
             backer_multiplier=1.65,
             persistent=True,
-            stake=dict(amount=0.01, symbol="BTC"),
+            backer_stake=dict(amount=0.01, symbol="BTC"),
         ),
     )
 
@@ -219,14 +219,14 @@ def test_placebets(mock, api):
                     "betting_market_id": "1.25.50449",
                     "back_or_lay": "lay",
                     "backer_multiplier": 1.65,
-                    "stake": {"amount": 0.01, "symbol": "BTC"},
+                    "backer_stake": {"amount": 0.01, "symbol": "BTC"},
                     "persistent": True,
                 },
                 {
                     "betting_market_id": "1.25.50449",
                     "back_or_lay": "back",
                     "backer_multiplier": 1.75,
-                    "stake": {"amount": 0.01, "symbol": "BTC"},
+                    "backer_stake": {"amount": 0.01, "symbol": "BTC"},
                     "persistent": True,
                 },
             ]
@@ -244,7 +244,7 @@ def test_placebet_nonpersistent(mock, api):
             betting_market_id="1.25.50449",
             backer_multiplier=1.65,
             persistent=False,
-            stake=dict(amount=0.01, symbol="BTC"),
+            backer_stake=dict(amount=0.01, symbol="BTC"),
         ),
     )
 
@@ -265,14 +265,14 @@ def test_placebets_nonpersistent(mock, api):
                     "betting_market_id": "1.25.50449",
                     "back_or_lay": "lay",
                     "backer_multiplier": 1.65,
-                    "stake": {"amount": 0.01, "symbol": "BTC"},
+                    "backer_stake": {"amount": 0.01, "symbol": "BTC"},
                     "persistent": False,
                 },
                 {
                     "betting_market_id": "1.25.50449",
                     "back_or_lay": "back",
                     "backer_multiplier": 1.75,
-                    "stake": {"amount": 0.01, "symbol": "BTC"},
+                    "backer_stake": {"amount": 0.01, "symbol": "BTC"},
                     "persistent": False,
                 },
             ]
