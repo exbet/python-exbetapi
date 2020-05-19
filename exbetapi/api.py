@@ -1,27 +1,14 @@
+# -*- coding: utf-8 -*-
 """ API module for Exbet Market Making API
 """
 import time
 import requests
-
-
-class JsonDecodingFailedException(Exception):
-    """ Exception when decoding of server response failed
-    """
-
-
-class AlreadyLoggedinException(Exception):
-    """ Instance is already logged in
-    """
-
-
-class ExecutionError(Exception):
-    """ The execution on the API failed
-    """
-
-
-class APIError(Exception):
-    """ The API raised an error
-    """
+from .exceptions import (
+    JsonDecodingFailedException,
+    AlreadyLoggedinException,
+    ExecutionError,
+    APIError,
+)
 
 
 class ExbetAPI:
@@ -49,10 +36,17 @@ class ExbetAPI:
         resp = requests.post(
             self.BASEURL + endpoint, json=payload, headers=self._headers()
         )
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except requests.HTTPError:
+            try:
+                t = resp.json()
+            except Exception:
+                t = resp.text
+            raise APIError(t)
         try:
             ret = resp.json()
-        except Exception:
+        except Exception:  # pragma: no cover
             raise JsonDecodingFailedException("Decoding API response failed!")
         ret = self._parse_response(ret)
         return ret
@@ -61,10 +55,17 @@ class ExbetAPI:
         """ Private method to send a GET from API resource
         """
         resp = requests.get(self.BASEURL + endpoint, headers=self._headers())
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except requests.HTTPError:
+            try:
+                t = resp.json()
+            except Exception:
+                t = resp.text
+            raise APIError(t)
         try:
             ret = resp.json()
-        except Exception:
+        except Exception:  # pragma: no cover
             raise JsonDecodingFailedException("Decoding API response failed!")
         ret = self._parse_response(ret)
         return ret
@@ -73,7 +74,7 @@ class ExbetAPI:
     def _parse_response(ret):
         """ We parse the response for exceptions/errors that the API returns
         """
-        if "error" in ret:
+        if "error" in ret:  # pragma: no cover
             raise APIError([x["message"] for x in ret["errors"]])
         return ret
 
@@ -88,7 +89,7 @@ class ExbetAPI:
         """
         return self._post("task", dict(task_id=task_id))
 
-    def _wait_for_task(self, task_id: str) -> dict:
+    def _wait_for_task(self, task_id: str) -> dict:  # pragma: no cover
         """ Wait for a task to complete
         """
         cnt = 0
@@ -107,7 +108,7 @@ class ExbetAPI:
                 raise ExecutionError("Inform admins")
 
     @staticmethod
-    def _obtain_task_results(task):
+    def _obtain_task_results(task):  # pragma: no cover
         """ A task contains information about the operations performed. Extract
             those
         """
@@ -125,7 +126,7 @@ class ExbetAPI:
             return dict(amount=float(amount), symbol=symbol)
         if isinstance(stake, dict) and "amount" in stake and "symbol" in stake:
             return dict(amount=float(stake["amount"]), symbol=stake["symbol"])
-        raise ValueError("Invalid stake format")
+        raise ValueError("Invalid stake format")  # pragma: no cover
 
     #
     # Public methods
@@ -210,10 +211,9 @@ class ExbetAPI:
         :param bool wait: Wait/Block until action has been confirmed
         """
         resp = self._post("bet/cancel", dict(bet_id=bet_id))
-        if wait:
+        if wait:  # pragma: no cover
             self._wait_for_task(resp.get("task_id"))
-            return
-        return
+        return resp
 
     def cancel_bets(self, bet_ids: list, wait=False) -> None:
         """
@@ -224,16 +224,19 @@ class ExbetAPI:
             "bet/cancel_many",
             dict(bets_to_cancel=[dict(bet_id=bet_id) for bet_id in bet_ids]),
         )
-        if wait:
+        if wait:  # pragma: no cover
             self._wait_for_task(resp.get("task_id"))
-            return
-        return
+        return resp
 
     def edit_bet(self, *args, **kwargs):
-        return NotImplementedError
+        """ Not yet implemented!
+        """
+        raise NotImplementedError
 
     def edit_bets(self, *args, **kwargs):
-        return NotImplementedError
+        """ Not yet implemented!
+        """
+        raise NotImplementedError
 
     def place_bet(
         self,
@@ -268,14 +271,14 @@ class ExbetAPI:
                 betting_market_id=betting_market_id,
                 backer_multiplier=backer_multiplier,
                 persistent=persistent,
-                stake=stake,
+                backer_stake=stake,
             ),
         )
-        if wait:
+        if wait:  # pragma: no cover
             return self._obtain_task_results(self._wait_for_task(resp.get("task_id")))[
                 0
             ]
-        return None
+        return resp
 
     def place_bets(self, bets: list, wait=False) -> list:
         """ place multiple bets
@@ -302,16 +305,16 @@ class ExbetAPI:
                 betting_market_id=bet[0],
                 back_or_lay=bet[1],
                 backer_multiplier=bet[2],
-                stake=self._parse_stake(bet[3]),
-                persistent=False,
+                backer_stake=self._parse_stake(bet[3]),
+                persistent=True,
             )
             if len(bet) > 4:
                 b["persistent"] = bet[4]
             parsed_bets.append(b)
         resp = self._post("bet/place_many", dict(place_bets=parsed_bets))
-        if wait:
+        if wait:  # pragma: no cover
             return self._obtain_task_results(self._wait_for_task(resp.get("task_id")))
-        return None
+        return resp
 
     #
     # Find
@@ -421,42 +424,3 @@ class ExbetAPI:
         :param str bettingmarket_id: The betting market id (1.25.xxx)
         """
         return self._post("lookup/orderbook", dict(bettingmarket_id=bettingmarket_id))
-
-
-if __name__ == "__main__":
-    from pprint import pprint
-    from getpass import getpass
-
-    api = ExbetAPI()
-    api.login("fabian", getpass())
-    assert api.is_loggedin
-    #    pprint(api.account)
-    #    pprint(api.info)
-    #    pprint(api.balance)
-    #    pprint(api.session)
-    #    pprint(api.roles)
-    #    pprint(api.list_bets())
-    #
-    #    pprint(api.lookup_sports())
-    #    pprint(api.lookup_eventgroups("1.20.4"))
-    #    pprint(api.lookup_events("1.21.34"))
-    #    pprint(api.lookup_event("1.22.4197"))
-    #    pprint(api.lookup_bettingmarketgroups("1.22.4197"))
-    #    pprint(api.lookup_bettingmarketgroup("1.24.24049"))
-    #    pprint(api.lookup_bettingmarkets("1.24.24049"))
-    #    pprint(api.lookup_bettingmarket("1.25.50449"))
-    #    pprint(api.orderbook("1.25.50449"))
-    #    pprint(api.place_bet("1.25.50449", "lay", 1.65, "0.01 BTC"))
-    #    pprint(api.place_bet("1.25.50449", "lay", 1.65, "0.01 BTC", wait=True))
-    #    pprint(
-    #        api.place_bets(
-    #            [
-    #                ("1.25.50449", "lay", 1.65, "0.01 BTC"),
-    #                ("1.25.50449", "back", 1.75, "0.01 BTC"),
-    #            ],
-    #            wait=True,
-    #        )
-    #    )
-    #    pprint(api.list_bets())
-    # pprint(api.cancel_bet("1.26.171197", wait=True))
-    pprint(api.cancel_bets(["1.26.171196", "1.26.171195"], wait=True))

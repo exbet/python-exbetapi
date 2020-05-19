@@ -14,7 +14,8 @@ clean-pyc:
 	find . -name '*~' -exec rm -f {} +
 
 lint:
-	flake8 src/
+	flake8 exbetapi/
+	pylint exbetapi/
 
 test:
 	python3 setup.py test
@@ -43,7 +44,7 @@ upload:
 	twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
 
 docs:
-	sphinx-apidoc -d 6 -e -f -o docs src/
+	sphinx-apidoc -d 6 -e -f -o docs exbetapi/
 	make -C docs clean html
 
 docs_store:
