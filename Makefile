@@ -53,7 +53,8 @@ semver-updates:
 	semversioner changelog > CHANGELOG.md
 	$(eval CURRENT_VERSION = $(shell semversioner current-version))
 	sed -i "s/^__version__.*/__version__ = \"$(CURRENT_VERSION)\"/" exbetapi/__init__.py
-	-git add .changes exbetapi/__init__.py CHANGELOG.md
+	sed -i "s/^version.*/version = \"$(CURRENT_VERSION)\"/" pyproject.toml
+	-git add .changes exbetapi/__init__.py pyproject.toml CHANGELOG.md
 	-git commit -m "semverioner release updates" --no-verify
 	-git flow release start $(CURRENT_VERSION)
 	git flow release finish $(CURRENT_VERSION)
