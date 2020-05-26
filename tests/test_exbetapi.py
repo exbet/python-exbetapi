@@ -149,43 +149,43 @@ def test_lookup_event(mock, api):
     mock.assert_called_once_with("lookup/event", dict(event_id=_id))
 
 
-@API_POST(dict(bettingmarketgroups=["foobar"]))
-def test_lookup_bettingmarketgroups(mock, api):
+@API_POST(dict(markets=["foobar"]))
+def test_lookup_markets(mock, api):
     _id = "1.22.0"
-    assert api.lookup_bettingmarketgroups(_id) == ["foobar"]
-    mock.assert_called_once_with("lookup/bettingmarketgroups", dict(event_id=_id))
+    assert api.lookup_markets(_id) == ["foobar"]
+    mock.assert_called_once_with("lookup/markets", dict(event_id=_id))
 
 
 @API_POST(dict(foo="bar"))
-def test_lookup_bettingmarketgroup(mock, api):
+def test_lookup_market(mock, api):
     _id = "1.24.0"
-    assert api.lookup_bettingmarketgroup(_id) == dict(foo="bar")
+    assert api.lookup_market(_id) == dict(foo="bar")
     mock.assert_called_once_with(
-        "lookup/bettingmarketgroup", dict(bettingmarketgroup_id=_id)
+        "lookup/market", dict(market_id=_id)
     )
 
 
-@API_POST(dict(bettingmarkets=["foobar"]))
-def test_lookup_bettingmarkets(mock, api):
+@API_POST(dict(selections=["foobar"]))
+def test_lookup_selections(mock, api):
     _id = "1.24.0"
-    assert api.lookup_bettingmarkets(_id) == ["foobar"]
+    assert api.lookup_selections(_id) == ["foobar"]
     mock.assert_called_once_with(
-        "lookup/bettingmarkets", dict(bettingmarketgroup_id=_id)
+        "lookup/selections", dict(market_id=_id)
     )
 
 
 @API_POST(dict(foo="bar"))
-def test_lookup_bettingmarket(mock, api):
+def test_lookup_selection(mock, api):
     _id = "1.25.0"
-    assert api.lookup_bettingmarket(_id) == dict(foo="bar")
-    mock.assert_called_once_with("lookup/bettingmarket", dict(bettingmarket_id=_id))
+    assert api.lookup_selection(_id) == dict(foo="bar")
+    mock.assert_called_once_with("lookup/selection", dict(selection_id=_id))
 
 
 @API_POST(dict(aggregated_back_bets=[], aggregated_lay_bets=[]))
 def test_orderbook(mock, api):
     _id = "1.25.0"
     assert api.orderbook(_id) == dict(aggregated_back_bets=[], aggregated_lay_bets=[])
-    mock.assert_called_once_with("lookup/orderbook", dict(bettingmarket_id=_id))
+    mock.assert_called_once_with("lookup/orderbook", dict(selection_id=_id))
 
 
 @API_POST(dict())
@@ -195,7 +195,7 @@ def test_placebet(mock, api):
         "bet/place",
         dict(
             back_or_lay="lay",
-            betting_market_id="1.25.50449",
+            selection_id="1.25.50449",
             backer_multiplier=1.65,
             persistent=True,
             backer_stake=dict(amount=0.01, symbol="BTC"),
@@ -216,14 +216,14 @@ def test_placebets(mock, api):
         {
             "place_bets": [
                 {
-                    "betting_market_id": "1.25.50449",
+                    "selection_id": "1.25.50449",
                     "back_or_lay": "lay",
                     "backer_multiplier": 1.65,
                     "backer_stake": {"amount": 0.01, "symbol": "BTC"},
                     "persistent": True,
                 },
                 {
-                    "betting_market_id": "1.25.50449",
+                    "selection_id": "1.25.50449",
                     "back_or_lay": "back",
                     "backer_multiplier": 1.75,
                     "backer_stake": {"amount": 0.01, "symbol": "BTC"},
@@ -241,7 +241,7 @@ def test_placebet_nonpersistent(mock, api):
         "bet/place",
         dict(
             back_or_lay="lay",
-            betting_market_id="1.25.50449",
+            selection_id="1.25.50449",
             backer_multiplier=1.65,
             persistent=False,
             backer_stake=dict(amount=0.01, symbol="BTC"),
@@ -262,14 +262,14 @@ def test_placebets_nonpersistent(mock, api):
         {
             "place_bets": [
                 {
-                    "betting_market_id": "1.25.50449",
+                    "selection_id": "1.25.50449",
                     "back_or_lay": "lay",
                     "backer_multiplier": 1.65,
                     "backer_stake": {"amount": 0.01, "symbol": "BTC"},
                     "persistent": False,
                 },
                 {
-                    "betting_market_id": "1.25.50449",
+                    "selection_id": "1.25.50449",
                     "back_or_lay": "back",
                     "backer_multiplier": 1.75,
                     "backer_stake": {"amount": 0.01, "symbol": "BTC"},
@@ -302,18 +302,18 @@ def test_get_task(mock, api):
 
 
 @API_POST(dict())
-def test_find_bettingmarket(mock, api):
-    api.find_betting_market(
-        "Sport", "Eventgroup", ["team1", "team2"], "group", "market"
+def test_find_selection(mock, api):
+    api.find_selection(
+        "Sport", "Eventgroup", ["team1", "team2"], "market", "selection"
     )
     mock.assert_called_once_with(
-        "find/bettingmarket",
+        "find/selections",
         {
             "sport": "Sport",
             "event_group": "Eventgroup",
             "teams": ["team1", "team2"],
-            "group": "group",
             "market": "market",
+            "selection": "selection",
         },
     )
 

@@ -18,27 +18,20 @@ lint:
 	pylint exbetapi/
 
 test:
-	python3 setup.py test
+	poetry run pytest
 
 build:
-	python3 setup.py build
+	poetry build
 
 install: build
-	python3 setup.py install
-
-install-user: build
-	python3 setup.py install --user
+	poetry install
 
 git:
 	git push --all
 	git push --tags
 
 check:
-	python3 setup.py check
-
-dist:
-	python3 setup.py sdist bdist_wheel
-	python3 setup.py bdist_wheel
+	poetry check
 
 upload:
 	twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
@@ -51,13 +44,6 @@ docs_store:
 	git add docs
 	-git commit -m "Updating docs/"
 
-authors:
-	git shortlog -e -s -n > AUTHORS
-
-authors_store:
-	git add AUTHORS
-	-git commit -m "Updating Authors"
-
 semver: semver-release semver-updates
 
 semver-release:
@@ -66,11 +52,11 @@ semver-release:
 semver-updates:
 	semversioner changelog > CHANGELOG.md
 	$(eval CURRENT_VERSION = $(shell semversioner current-version))
-	sed -i "s/^__version__.*/__version__ = \"$(CURRENT_VERSION)\"/" setup.py
-	-git add .changes setup.py CHANGELOG.md
+	sed -i "s/^__version__.*/__version__ = \"$(CURRENT_VERSION)\"/" exbetapi/__init__.py
+	-git add .changes exbetapi/__init__.py CHANGELOG.md
 	-git commit -m "semverioner release updates" --no-verify
 	-git flow release start $(CURRENT_VERSION)
 	git flow release finish $(CURRENT_VERSION)
 
-prerelease: test docs docs_store authors authors_store
-release: prerelease semver clean build check dist upload git
+prerelease: test docs docs_store
+release: prerelease semver clean check build upload git

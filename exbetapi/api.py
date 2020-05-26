@@ -240,7 +240,7 @@ class ExbetAPI:
 
     def place_bet(
         self,
-        betting_market_id: str,
+        selection_id: str,
         back_or_lay: str,
         backer_multiplier: float,
         stake: dict,
@@ -249,7 +249,7 @@ class ExbetAPI:
     ) -> dict:
         """ Place a bet
 
-        :param str betting_market_id: The betting market id to place the bet in (1.25.xxxx)
+        :param str selection_id: The selection id to place the bet in (1.25.xxxx)
         :param option back_or_lay: Either 'back' or 'lay' the bet
         :param float backer_multiplier: Odds
         :param str stake: Stake as ``amount symbol``
@@ -268,7 +268,7 @@ class ExbetAPI:
             "bet/place",
             dict(
                 back_or_lay=back_or_lay,
-                betting_market_id=betting_market_id,
+                selection_id=selection_id,
                 backer_multiplier=backer_multiplier,
                 persistent=persistent,
                 backer_stake=stake,
@@ -281,8 +281,7 @@ class ExbetAPI:
         return resp
 
     def place_bets(self, bets: list, wait=False) -> list:
-        """ place multiple bets
-
+        """ Place multiple bets
 
         :param list bets: This is a list in the form of `place_bet` arguments.
         :param bool wait: Wait for confirmation of the database (if `true`
@@ -302,7 +301,7 @@ class ExbetAPI:
         parsed_bets = list()
         for bet in bets:
             b = dict(
-                betting_market_id=bet[0],
+                selection_id=bet[0],
                 back_or_lay=bet[1],
                 backer_multiplier=bet[2],
                 backer_stake=self._parse_stake(bet[3]),
@@ -319,69 +318,69 @@ class ExbetAPI:
     #
     # Find
     #
-    def find_betting_market(
-        self, sport: str, event_group: str, teams: dict, group: str, market: str
+    def find_selection(
+        self, sport: str, event_group: str, teams: dict, market: str, selection: str
     ):
-        """ Find a betting market id provided sufficient information
+        """ Find a selection id provided sufficient information
 
         :param str sport: Sports name (e.g. Basketball)
         :param str event_group: Name of the event group (e.g. NBA)
         :param dict teams: dictionary in the form of ``{"home": "xx", "away": "yy"}``
-        :param str group: Betting Market Group name (e.g. Moneyline)
-        :param str market: The individual market name (e.g. "xx" for Team xx)
+        :param str market: Market name (e.g. Moneyline)
+        :param str selection: The individual selection name (e.g. "xx" for Team xx)
 
         """
         return self._post(
-            "find/bettingmarket",
+            "find/selections",
             dict(
                 sport=sport,
                 event_group=event_group,
                 teams=teams,
-                group=group,
                 market=market,
+                selection=selection,
             ),
         )
 
     #
     # Lookup
     #
-    def lookup_bettingmarket(self, bettingmarket_id: str) -> dict:
-        """ Provides information about a betting market
+    def lookup_selection(self, selection_id: str) -> dict:
+        """ Provides information about a selection
 
-        :param str bettingmarket_id: The betting market id (1.25.xxx)
+        :param str selection_id: The selection id (1.25.xxx)
         """
         return self._post(
-            "lookup/bettingmarket", dict(bettingmarket_id=bettingmarket_id)
+            "lookup/selection", dict(selection_id=selection_id)
         )
 
-    def lookup_bettingmarkets(self, bettingmarketgroup_id: str) -> dict:
+    def lookup_selections(self, market_id: str) -> dict:
         """
-        Provides a list of betting markets in a betting market group
+        Provides a list of selections in a market
 
-        :param str bettingmarketgroup_id: Betting Market Group id (1.24.xxxx)
-        """
-        return self._post(
-            "lookup/bettingmarkets", dict(bettingmarketgroup_id=bettingmarketgroup_id),
-        ).get("bettingmarkets")
-
-    def lookup_bettingmarketgroup(self, bettingmarketgroup_id: str) -> dict:
-        """ Provides information about a betting market group
-
-        :param str bettingmarketgroup_id: Betting Market Group id (1.24.xxxx)
+        :param str market_id: Market id (1.24.xxxx)
         """
         return self._post(
-            "lookup/bettingmarketgroup",
-            dict(bettingmarketgroup_id=bettingmarketgroup_id),
+            "lookup/selections", dict(market_id=market_id),
+        ).get("selections")
+
+    def lookup_market(self, market_id: str) -> dict:
+        """ Provides information about a market
+
+        :param str market_id: Market  id (1.24.xxxx)
+        """
+        return self._post(
+            "lookup/market",
+            dict(market_id=market_id),
         )
 
-    def lookup_bettingmarketgroups(self, event_id: str) -> list:
+    def lookup_markets(self, event_id: str) -> list:
         """
-        List betting market groups of an event
+        List markets of an event
 
         :param str event_id: Event id (1.22.xxx)
         """
-        return self._post("lookup/bettingmarketgroups", dict(event_id=event_id)).get(
-            "bettingmarketgroups"
+        return self._post("lookup/markets", dict(event_id=event_id)).get(
+            "markets"
         )
 
     def lookup_event(self, event_id: str) -> dict:
@@ -418,9 +417,9 @@ class ExbetAPI:
     #
     # Orderbook
     #
-    def orderbook(self, bettingmarket_id: str) -> dict:
-        """ Provide (consolidated) order book of a betting market
+    def orderbook(self, selection_id: str) -> dict:
+        """ Provide (consolidated) order book of a selection
 
-        :param str bettingmarket_id: The betting market id (1.25.xxx)
+        :param str selection_id: The selection id (1.25.xxx)
         """
-        return self._post("lookup/orderbook", dict(bettingmarket_id=bettingmarket_id))
+        return self._post("lookup/orderbook", dict(selection_id=selection_id))

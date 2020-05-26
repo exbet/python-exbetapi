@@ -7,6 +7,7 @@ Submodules
 .. toctree::
 
    exbetapi.api
+   exbetapi.cli
    exbetapi.exceptions
 
 Module contents

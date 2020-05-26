@@ -103,58 +103,58 @@ def lookup_event(event_id):
 
 @main.command()
 @click.argument("event_id", default="1.22.0")
-def lookup_bettingmarketgroups(event_id):
-    """ List bettingmarketgroups within an event
+def lookup_markets(event_id):
+    """ List markets within an event
     """
-    dump(api.lookup_bettingmarketgroups(event_id))
+    dump(api.lookup_markets(event_id))
 
 
 @main.command()
-@click.argument("bettingmarketgroup_id", default="1.24.0")
-def lookup_bettingmarketgroup(bettingmarketgroup_id):
-    """ Get bettingmarketgroup
+@click.argument("market_id", default="1.24.0")
+def lookup_market(market_id):
+    """ Get market
     """
-    dump(api.lookup_bettingmarketgroup(bettingmarketgroup_id))
+    dump(api.lookup_market(market_id))
 
 
 @main.command()
-@click.argument("bettingmarketgroup_id", default="1.24.0")
-def lookup_bettingmarkets(bettingmarketgroup_id):
-    """ List bettingmarkets from bettingmarketgroup id
+@click.argument("market_id", default="1.24.0")
+def lookup_selections(market_id):
+    """ List all selections from a market
     """
-    dump(api.lookup_bettingmarkets(bettingmarketgroup_id))
+    dump(api.lookup_selections(market_id))
 
 
 @main.command()
-@click.argument("bettingmarket_id", default="1.25.0")
-def lookup_bettingmarket(bettingmarket_id):
-    """ Get bettingmarket
+@click.argument("selection_id", default="1.25.0")
+def lookup_selection(selection_id):
+    """ Get selection by id
     """
-    dump(api.lookup_bettingmarket(bettingmarket_id))
+    dump(api.lookup_selection(selection_id))
 
 
 @main.command()
-@click.argument("bettingmarket_id", default="1.25.0")
-def orderbook(bettingmarket_id):
-    """ Show order book of a bettingmarket
+@click.argument("selection_id", default="1.25.0")
+def orderbook(selection_id):
+    """ Show order book of a selection
     """
-    dump(api.orderbook(bettingmarket_id))
+    dump(api.orderbook(selection_id))
 
 
 @main.command()
-@click.argument("bettingmarket_id")
+@click.argument("selection_id")
 @click.argument("back_or_lay", type=click.Choice(["back", "lay"]))
 @click.argument("backer_multiplier", type=float)
 @click.argument("backer_stake", type=float)
 @click.option("--persistent", type=bool)
 def placebet(
-    bettingmarket_id, back_or_lay, backer_multiplier, backer_stake, persistent
+    selection_id, back_or_lay, backer_multiplier, backer_stake, persistent
 ):
     """ Place a single bet
     """
     dump(
         api.place_bet(
-            bettingmarket_id,
+            selection_id,
             back_or_lay,
             backer_multiplier,
             "{} BTC".format(backer_stake),
@@ -164,13 +164,13 @@ def placebet(
 
 
 @main.command()
-@click.argument("bettingmarket_id")
+@click.argument("selection_id")
 @click.argument("back_or_lay", type=click.Choice(["back", "lay"]))
 @click.argument("total_backer_stake", type=float)
 @click.argument("mulipliers", type=float, nargs=-1)
 @click.option("--persistent", type=bool)
 def placebets(
-    persistent, bettingmarket_id, back_or_lay, total_backer_stake, mulipliers
+    persistent, selection_id, back_or_lay, total_backer_stake, mulipliers
 ):
     """ Place multiple bets at different odds for a total stake
     """
@@ -178,7 +178,7 @@ def placebets(
     for m in mulipliers:
         bets.append(
             (
-                bettingmarket_id,
+                selection_id,
                 back_or_lay,
                 m,
                 "{} BTC".format(total_backer_stake / len(mulipliers)),
@@ -217,17 +217,17 @@ def get_task(task_id):
 @click.argument("eventgroup")
 @click.argument("hometeam")
 @click.argument("awayteam")
-@click.argument("bettingmarketgroup")
 @click.argument("market")
-def find_market(sport, eventgroup, hometeam, awayteam, bettingmarketgroup, market):
-    """ Find a market
+@click.argument("selection")
+def find_market(sport, eventgroup, hometeam, awayteam, market, selection):
+    """ Find a selection
     """
-    api.find_betting_market(
+    api.find_selection(
         sport,
         eventgroup,
         dict(home=hometeam, away=awayteam),
-        bettingmarketgroup,
         market,
+        selection,
     )
 
 
