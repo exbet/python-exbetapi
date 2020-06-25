@@ -9,6 +9,7 @@ from .exceptions import (
     ExecutionError,
     APIError,
 )
+from . import __version__
 
 
 class ExbetAPI:
@@ -27,6 +28,7 @@ class ExbetAPI:
         headers = dict()
         if self.ACCESS_TOKEN:
             headers["Authorization"] = "Bearer {}".format(self.ACCESS_TOKEN)
+        headers["User-Agent"] = "python/exbetapi-" + __version__
         return headers
 
     def _post(self, endpoint: str, payload: dict) -> dict:
@@ -349,9 +351,7 @@ class ExbetAPI:
 
         :param str selection_id: The selection id (1.25.xxx)
         """
-        return self._post(
-            "lookup/selection", dict(selection_id=selection_id)
-        )
+        return self._post("lookup/selection", dict(selection_id=selection_id))
 
     def lookup_selections(self, market_id: str) -> dict:
         """
@@ -359,19 +359,16 @@ class ExbetAPI:
 
         :param str market_id: Market id (1.24.xxxx)
         """
-        return self._post(
-            "lookup/selections", dict(market_id=market_id),
-        ).get("selections")
+        return self._post("lookup/selections", dict(market_id=market_id),).get(
+            "selections"
+        )
 
     def lookup_market(self, market_id: str) -> dict:
         """ Provides information about a market
 
         :param str market_id: Market  id (1.24.xxxx)
         """
-        return self._post(
-            "lookup/market",
-            dict(market_id=market_id),
-        )
+        return self._post("lookup/market", dict(market_id=market_id),)
 
     def lookup_markets(self, event_id: str) -> list:
         """
@@ -379,9 +376,7 @@ class ExbetAPI:
 
         :param str event_id: Event id (1.22.xxx)
         """
-        return self._post("lookup/markets", dict(event_id=event_id)).get(
-            "markets"
-        )
+        return self._post("lookup/markets", dict(event_id=event_id)).get("markets")
 
     def lookup_event(self, event_id: str) -> dict:
         """ Provide information about an event
