@@ -40,20 +40,25 @@ def test_init():
 
 
 def test_no_headers():
-    assert not ExbetAPI()._headers()
+    assert "Authorization" not in ExbetAPI()._headers()
 
 
 def test_headers(api):
-    assert api._headers() == dict(Authorization="Bearer a")
+    assert api._headers().get("Authorization") == "Bearer a"
 
 
 @unittest.mock.patch("requests.post")
 def test_post(m, api):
+    from exbetapi import __version__
+
     api.get_bet("1.26.0")
     m.assert_called_once_with(
         ExbetAPI.BASEURL + "bet/get",
         json={"bet_id": "1.26.0"},
-        headers={"Authorization": "Bearer a"},
+        headers={
+            "Authorization": "Bearer a",
+            "User-Agent": "python/exbetapi-" + __version__,
+        },
     )
 
 
@@ -160,18 +165,14 @@ def test_lookup_markets(mock, api):
 def test_lookup_market(mock, api):
     _id = "1.24.0"
     assert api.lookup_market(_id) == dict(foo="bar")
-    mock.assert_called_once_with(
-        "lookup/market", dict(market_id=_id)
-    )
+    mock.assert_called_once_with("lookup/market", dict(market_id=_id))
 
 
 @API_POST(dict(selections=["foobar"]))
 def test_lookup_selections(mock, api):
     _id = "1.24.0"
     assert api.lookup_selections(_id) == ["foobar"]
-    mock.assert_called_once_with(
-        "lookup/selections", dict(market_id=_id)
-    )
+    mock.assert_called_once_with("lookup/selections", dict(market_id=_id))
 
 
 @API_POST(dict(foo="bar"))
@@ -303,9 +304,7 @@ def test_get_task(mock, api):
 
 @API_POST(dict())
 def test_find_selection(mock, api):
-    api.find_selection(
-        "Sport", "Eventgroup", ["team1", "team2"], "market", "selection"
-    )
+    api.find_selection("Sport", "Eventgroup", ["team1", "team2"], "market", "selection")
     mock.assert_called_once_with(
         "find/selections",
         {

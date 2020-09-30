@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "exbetapi"
-version = "0.1.1"
+version = "2.1.0"
 description = "Python Bindings for Trading API for exbet.io"
 authors = ["Python Development Team <py@exbet.io>"]
 homepage = "https://github.com/exbet/python-exbetapi"
