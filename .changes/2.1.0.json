@@ -1,0 +1,10 @@
+[
+  {
+    "description": "connect to macau deployment per default",
+    "type": "minor"
+  },
+  {
+    "description": "Add a User-agent to the requests",
+    "type": "patch"
+  }
+]

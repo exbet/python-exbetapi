@@ -1,6 +1,11 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 2.1.0
+
+- minor: connect to macau deployment per default
+- patch: Add a User-agent to the requests
+
 ## 2.0.0
 
 - major: api renaming (breaking)
