@@ -9,22 +9,28 @@ from .exceptions import (
     ExecutionError,
     APIError,
 )
-from . import __version__
 
 
 class ExbetAPI:
     """ API Class for Market Making
     """
 
-    BASEURL = "https://mm.api.everett.exbet.io/v2/"
+    BASEURL = "https://api.macau.exbet.io/v2/"
     ACCESS_TOKEN = None
 
     _SLEEPTIME = 0.2
     _BLOCKTIME = 1
 
+    def __init__(self, *args, **kwargs):
+        if kwargs.pop("use_everett", None):
+            self.BASEURL = "https://mm.api.everett.exbet.io/v2/"
+        vars(self).update(**kwargs)
+
     def _headers(self):
         """ Provides header for POST and GET requests
         """
+        from . import __version__
+
         headers = dict()
         if self.ACCESS_TOKEN:
             headers["Authorization"] = "Bearer {}".format(self.ACCESS_TOKEN)
