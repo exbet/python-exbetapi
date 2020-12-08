@@ -12,8 +12,7 @@ from .exceptions import (
 
 
 class ExbetAPI:
-    """ API Class for Market Making
-    """
+    """API Class for Market Making"""
 
     BASEURL = "https://api.macau.exbet.io/v2/"
     ACCESS_TOKEN = None
@@ -24,11 +23,12 @@ class ExbetAPI:
     def __init__(self, *args, **kwargs):
         if kwargs.pop("use_everett", None):
             self.BASEURL = "https://mm.api.everett.exbet.io/v2/"
+        if "use_url" in kwargs:
+            self.BASEURL = kwargs.pop("use_url")
         vars(self).update(**kwargs)
 
     def _headers(self):
-        """ Provides header for POST and GET requests
-        """
+        """Provides header for POST and GET requests"""
         from . import __version__
 
         headers = dict()
@@ -38,8 +38,7 @@ class ExbetAPI:
         return headers
 
     def _post(self, endpoint: str, payload: dict) -> dict:
-        """ Private method to send a POST request with payload to the API
-        """
+        """Private method to send a POST request with payload to the API"""
         assert isinstance(payload, dict)
         resp = requests.post(
             self.BASEURL + endpoint, json=payload, headers=self._headers()
@@ -60,8 +59,7 @@ class ExbetAPI:
         return ret
 
     def _get(self, endpoint: str) -> dict:
-        """ Private method to send a GET from API resource
-        """
+        """Private method to send a GET from API resource"""
         resp = requests.get(self.BASEURL + endpoint, headers=self._headers())
         try:
             resp.raise_for_status()
@@ -80,26 +78,22 @@ class ExbetAPI:
 
     @staticmethod
     def _parse_response(ret):
-        """ We parse the response for exceptions/errors that the API returns
-        """
+        """We parse the response for exceptions/errors that the API returns"""
         if "error" in ret:  # pragma: no cover
             raise APIError([x["message"] for x in ret["errors"]])
         return ret
 
     @staticmethod
     def _require_dict_keys(resp: dict, attributes: list) -> None:
-        """ Internal test for required dict keys
-        """
+        """Internal test for required dict keys"""
         assert all([x in resp for x in attributes])
 
     def _get_task(self, task_id: str) -> dict:
-        """ Obtain a task from the API
-        """
+        """Obtain a task from the API"""
         return self._post("task", dict(task_id=task_id))
 
     def _wait_for_task(self, task_id: str) -> dict:  # pragma: no cover
-        """ Wait for a task to complete
-        """
+        """Wait for a task to complete"""
         cnt = 0
         while True:
             task = self._get_task(task_id)
@@ -117,8 +111,8 @@ class ExbetAPI:
 
     @staticmethod
     def _obtain_task_results(task):  # pragma: no cover
-        """ A task contains information about the operations performed. Extract
-            those
+        """A task contains information about the operations performed. Extract
+        those
         """
         results = task["info"].get("operation_results")
         if results:
@@ -127,8 +121,7 @@ class ExbetAPI:
 
     @staticmethod
     def _parse_stake(stake):
-        """ Stake cane be provided as string and dictionary. Unified here.
-        """
+        """Stake cane be provided as string and dictionary. Unified here."""
         if isinstance(stake, str) and " " in stake:
             amount, symbol = stake.split(" ")
             return dict(amount=float(amount), symbol=symbol)
@@ -140,13 +133,11 @@ class ExbetAPI:
     # Public methods
     #
     def reset(self):
-        """ Reset instance
-        """
+        """Reset instance"""
         self.ACCESS_TOKEN = None
 
     def login(self, username: str, password: str) -> None:
-        """ Obtain and store session for user
-        """
+        """Obtain and store session for user"""
         if self.ACCESS_TOKEN is not None:
             raise AlreadyLoggedinException("Reset instance with .reset()")
         resp = self._post("login", dict(username=username, password=password))
@@ -157,20 +148,17 @@ class ExbetAPI:
     # General information
     #
     def is_loggedin(self) -> bool:
-        """ Am i logged in?
-        """
+        """Am i logged in?"""
         return bool(self.ACCESS_TOKEN)
 
     @property
     def info(self) -> dict:
-        """ Obtain general information from the API
-        """
+        """Obtain general information from the API"""
         return self._get("info")
 
     @property
     def session(self) -> dict:
-        """ Obtain session information
-        """
+        """Obtain session information"""
         return self._get("session")
 
     #
@@ -178,14 +166,12 @@ class ExbetAPI:
     #
     @property
     def account(self) -> dict:
-        """ Obtain account details
-        """
+        """Obtain account details"""
         return self._get("account")
 
     @property
     def balance(self) -> dict:
-        """ Obtain account balance from api
-        """
+        """Obtain account balance from api"""
         balances = self._get("balance").get("balances")
         ret = dict()
         for b in balances:
@@ -194,23 +180,21 @@ class ExbetAPI:
 
     @property
     def roles(self) -> list:
-        """ Provide roles of the account
-        """
+        """Provide roles of the account"""
         return self.account.get("roles")
 
     #
     # Bets
     #
     def get_bet(self, bet_id: str) -> dict:
-        """ Obtain details of a placed bet
+        """Obtain details of a placed bet
 
         :param str bet_id: Bet of the form ``1.26.xxxxxxx``
         """
         return self._post("bet/get", dict(bet_id=bet_id))
 
     def list_bets(self) -> dict:
-        """ List account's bets, sorted for matched and unmatched
-        """
+        """List account's bets, sorted for matched and unmatched"""
         return self._get("bet/list")
 
     def cancel_bet(self, bet_id: str, wait=False) -> None:
@@ -237,13 +221,11 @@ class ExbetAPI:
         return resp
 
     def edit_bet(self, *args, **kwargs):
-        """ Not yet implemented!
-        """
+        """Not yet implemented!"""
         raise NotImplementedError
 
     def edit_bets(self, *args, **kwargs):
-        """ Not yet implemented!
-        """
+        """Not yet implemented!"""
         raise NotImplementedError
 
     def place_bet(
@@ -255,7 +237,7 @@ class ExbetAPI:
         persistent=True,
         wait=False,
     ) -> dict:
-        """ Place a bet
+        """Place a bet
 
         :param str selection_id: The selection id to place the bet in (1.25.xxxx)
         :param option back_or_lay: Either 'back' or 'lay' the bet
@@ -289,7 +271,7 @@ class ExbetAPI:
         return resp
 
     def place_bets(self, bets: list, wait=False) -> list:
-        """ Place multiple bets
+        """Place multiple bets
 
         :param list bets: This is a list in the form of `place_bet` arguments.
         :param bool wait: Wait for confirmation of the database (if `true`
@@ -329,7 +311,7 @@ class ExbetAPI:
     def find_selection(
         self, sport: str, event_group: str, teams: dict, market: str, selection: str
     ):
-        """ Find a selection id provided sufficient information
+        """Find a selection id provided sufficient information
 
         :param str sport: Sports name (e.g. Basketball)
         :param str event_group: Name of the event group (e.g. NBA)
@@ -353,7 +335,7 @@ class ExbetAPI:
     # Lookup
     #
     def lookup_selection(self, selection_id: str) -> dict:
-        """ Provides information about a selection
+        """Provides information about a selection
 
         :param str selection_id: The selection id (1.25.xxx)
         """
@@ -370,7 +352,7 @@ class ExbetAPI:
         )
 
     def lookup_market(self, market_id: str) -> dict:
-        """ Provides information about a market
+        """Provides information about a market
 
         :param str market_id: Market  id (1.24.xxxx)
         """
@@ -385,7 +367,7 @@ class ExbetAPI:
         return self._post("lookup/markets", dict(event_id=event_id)).get("markets")
 
     def lookup_event(self, event_id: str) -> dict:
-        """ Provide information about an event
+        """Provide information about an event
 
         :param str event_id: Event id (1.22.xxx)
 
@@ -393,7 +375,7 @@ class ExbetAPI:
         return self._post("lookup/event", dict(event_id=event_id))
 
     def lookup_events(self, eventgroup_id: str) -> list:
-        """ List events within an event group
+        """List events within an event group
 
         :param str eventgroup_id: Event Group id (1.21.xxx)
         """
@@ -402,7 +384,7 @@ class ExbetAPI:
         )
 
     def lookup_eventgroups(self, sport_id: str) -> list:
-        """ List event groups with a sport
+        """List event groups with a sport
 
         :param str sport_id: Sport id (1.20.xxx)
         """
@@ -411,15 +393,14 @@ class ExbetAPI:
         )
 
     def lookup_sports(self) -> list:
-        """ List all sports
-        """
+        """List all sports"""
         return self._post("lookup/sports", dict()).get("sports")
 
     #
     # Orderbook
     #
     def orderbook(self, selection_id: str) -> dict:
-        """ Provide (consolidated) order book of a selection
+        """Provide (consolidated) order book of a selection
 
         :param str selection_id: The selection id (1.25.xxx)
         """
