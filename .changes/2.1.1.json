@@ -1,0 +1,18 @@
+[
+  {
+    "description": "Allow to change the BASE URL for testing",
+    "type": "patch"
+  },
+  {
+    "description": "Allow to specify the new base url via cli",
+    "type": "patch"
+  },
+  {
+    "description": "Install 'eb' as cli tool",
+    "type": "patch"
+  },
+  {
+    "description": "Improve README.md",
+    "type": "patch"
+  }
+]
