@@ -71,7 +71,7 @@ api.place_bet(
 )
 ```
 
-Full Documentation is available [here](https://python-exbetapi.rtfd.io)!
+Full API Documentation is available [here](https://python-exbetapi.readthedocs.io/en/master/exbetapi.api.html)!
 
 ## Development use
 
