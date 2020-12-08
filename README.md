@@ -53,6 +53,24 @@ After that you can get your account details with:
 print(api.account)
 ```
 
+List available sports, groups, markets and selections:
+
+```python
+print(api.list_sports())
+print(api.lookup_eventgroups(
+    sport_id
+))
+print(api.list_events(
+    eventgroup_id
+))
+print(api.list_markets(
+    event_id
+))
+print(api.list_selections(
+    market_id
+))
+```
+
 List your bets with:
 
 ```python
@@ -71,7 +89,8 @@ api.place_bet(
 )
 ```
 
-Full API Documentation is available [here](https://python-exbetapi.readthedocs.io/en/master/exbetapi.api.html)!
+Full Documentation is available [here](https://python-exbetapi.readthedocs.io/en/master/exbetapi.api.html). The underlying server-side
+APIs can be found [here](https://api.macau.exbet.io/apidocs/).
 
 ## Development use
 
