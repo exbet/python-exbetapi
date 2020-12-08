@@ -52,6 +52,10 @@ exclude_lines = [
 max-line-length = 120
 disable = ["C0330"]
 
+[tool.poetry.scripts]
+# aka entry points or console scripts for setup.py users
+eb = 'exbetapi.cli:main'
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
