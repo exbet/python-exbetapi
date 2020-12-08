@@ -23,6 +23,8 @@ class ExbetAPI:
     def __init__(self, *args, **kwargs):
         if kwargs.pop("use_everett", None):
             self.BASEURL = "https://mm.api.everett.exbet.io/v2/"
+        if "use_url" in kwargs:
+            self.BASEURL = kwargs.pop("use_url")
         vars(self).update(**kwargs)
 
     def _headers(self):
