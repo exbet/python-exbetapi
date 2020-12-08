@@ -5,15 +5,79 @@
 [![Documentation Status](https://readthedocs.org/projects/python-exbetapi/badge/?version=master)](https://python-exbetapi.readthedocs.io/en/master/?badge=master)
 
 
-### Installation
+## Installation
 
     pip3 install exbetapi
 
-### Development use
+## Usage
+
+After installation, you can either use exbetapi as a library or use the
+command-line interface tool (CLI) that comes with it.
+
+### CLI tool
+
+Show the CLI help:
+
+    $ eb --help
+    $ eb <command> --help
+
+To show user details, use:
+
+    $ eb account
+    User: <username>
+    Password: <password>
+
+To list your bets
+
+    $ eb list-bets
+
+To place a new bet
+
+    $ eb placebet SELECTION_ID [back|lay] BACKER_MULTIPLIER BACKER_STAKE
+    # for instance
+    $ eb placebet 1.25.38235 back 2.5 0.00001
+
+### Library
+
+To use the library, you first need to instanciate `ExbetAPI` and login:
+
+```python
+from exbetapi import ExbetAPI
+api = ExbetAPI()
+api.login(user, password)
+```
+
+After that you can get your account details with:
+
+```python
+print(api.account)
+```
+
+List your bets with:
+
+```python
+print(api.list_bets())
+```
+
+... or place a new bet using:
+
+```python
+api.place_bet(
+    selection_id,
+    back_or_lay,
+    backer_multiplier,
+    "{} BTC".format(backer_stake),
+    bool(persistent),
+)
+```
+
+Full Documentation is available [here](https://python-exbetapi.rtfd.io)!
+
+## Development use
 
 Clone the repository and create and activate a python virtual enviroment (assumes virtualenv is installed)
 
-    git clone git@github.com:exbet/python-exbetapi.git
+    git clone https://github.com/exbet/python-exbetapi.git
     cd python-exbetapi
     virtualenv env --python python3
     source env/bin/activate
@@ -27,7 +91,6 @@ Run tests
 
     poetry run pytest
 
-### Documentation
+## Documentation
 
-Docuemntation is available [here](https://python-exbetapi.rtfd.io)!
-
+Documentation is available [here](https://python-exbetapi.rtfd.io)!
