@@ -22,11 +22,14 @@ def dump(x):
 @click.option("--user", prompt="User", required=True)
 @click.option("--password", prompt="Password", hide_input=True)
 @click.option("--test/--no-test", default=False)
-def main(user, password, test):
+@click.option("--url")
+def main(user, password, test, url):
     """CLI tools for exbetapi"""
     global api
     if test:
         api = ExbetAPI(use_everett=True)
+    elif url:
+        api = ExbetAPI(use_url=url)
     else:
         api = ExbetAPI()
     api.login(user, password)
