@@ -3,6 +3,8 @@
 """
 import time
 import requests
+from inspect import signature
+from requests.auth import AuthBase
 from .exceptions import (
     JsonDecodingFailedException,
     AlreadyLoggedinException,
@@ -11,38 +13,58 @@ from .exceptions import (
 )
 
 
+class ExbetAPIAuth(AuthBase):
+    def __init__(self, token):
+        self.token = token
+
+    def __call__(self, r):
+        r.headers["Authorization"] = f"Bearer {self.token}"
+        return r
+
+
 class ExbetAPI:
     """API Class for Market Making"""
 
     BASEURL = "https://api.macau.exbet.io/v2/"
-    ACCESS_TOKEN = None
 
     _SLEEPTIME = 0.2
     _BLOCKTIME = 1
 
     def __init__(self, *args, **kwargs):
         if kwargs.pop("use_everett", None):
-            self.BASEURL = "https://mm.api.everett.exbet.io/v2/"
+            self.BASEURL = "https://api.everett.exbet.io/v2/"
         if "use_url" in kwargs:
             self.BASEURL = kwargs.pop("use_url")
         vars(self).update(**kwargs)
+
+        self.__requests_obj = None
+        self.__requests_auth = None
+
+    @property
+    def _requests(self):
+        """Returns a requets session"""
+        # Cache the session for keep-alive
+        if self.__requests_obj is None:
+            self.__requests_obj = requests.Session()
+            # Update headers
+            self.__requests_obj.headers.update(self._headers())
+        # Ensure we authenticate if logged-in
+        if self.__requests_auth:
+            self.__requests_obj.auth = self.__requests_auth
+        return self.__requests_obj
 
     def _headers(self):
         """Provides header for POST and GET requests"""
         from . import __version__
 
         headers = dict()
-        if self.ACCESS_TOKEN:
-            headers["Authorization"] = "Bearer {}".format(self.ACCESS_TOKEN)
         headers["User-Agent"] = "python/exbetapi-" + __version__
         return headers
 
     def _post(self, endpoint: str, payload: dict) -> dict:
         """Private method to send a POST request with payload to the API"""
         assert isinstance(payload, dict)
-        resp = requests.post(
-            self.BASEURL + endpoint, json=payload, headers=self._headers()
-        )
+        resp = self._requests.post(self.BASEURL + endpoint, json=payload)
         try:
             resp.raise_for_status()
         except requests.HTTPError:
@@ -60,7 +82,7 @@ class ExbetAPI:
 
     def _get(self, endpoint: str) -> dict:
         """Private method to send a GET from API resource"""
-        resp = requests.get(self.BASEURL + endpoint, headers=self._headers())
+        resp = self._requests.get(self.BASEURL + endpoint)
         try:
             resp.raise_for_status()
         except requests.HTTPError:
@@ -134,22 +156,22 @@ class ExbetAPI:
     #
     def reset(self):
         """Reset instance"""
-        self.ACCESS_TOKEN = None
+        self.__requests_auth = None
 
     def login(self, username: str, password: str) -> None:
         """Obtain and store session for user"""
-        if self.ACCESS_TOKEN is not None:
+        if self.__requests_auth is not None:
             raise AlreadyLoggedinException("Reset instance with .reset()")
         resp = self._post("login", dict(username=username, password=password))
         self._require_dict_keys(resp, ["access_token", "refresh_token", "username"])
-        self.ACCESS_TOKEN = resp["access_token"]
+        self.__requests_auth = ExbetAPIAuth(resp["access_token"])
 
     #
     # General information
     #
     def is_loggedin(self) -> bool:
         """Am i logged in?"""
-        return bool(self.ACCESS_TOKEN)
+        return bool(self.__requests_auth)
 
     @property
     def info(self) -> dict:
@@ -182,6 +204,15 @@ class ExbetAPI:
     def roles(self) -> list:
         """Provide roles of the account"""
         return self.account.get("roles")
+    
+    def wait_for_task(func):
+        def func_wrapper(self, *args, **kwargs):
+            resp = func(self, *args, **kwargs)
+            wait_kwarg = signature(func).parameters['wait'].default or kwargs.pop("wait", False)
+            if wait_kwarg:
+                self._wait_for_task(resp.get("task_id"))
+            return resp
+        return func_wrapper
 
     #
     # Bets
@@ -196,37 +227,56 @@ class ExbetAPI:
     def list_bets(self) -> dict:
         """List account's bets, sorted for matched and unmatched"""
         return self._get("bet/list")
-
+    
+    def list_matched(self) -> dict:
+        """List account's matched bets"""
+        return self._post("bet/list_matched")
+    
+    def list_unmatched(self) -> dict:
+        """List account's unmatched bets"""
+        return self._post("bet/list_unmatched")
+    
+    @wait_for_task
+    def many_actions(self, actions: dict, wait=False) -> None:
+        """Perform many edits, cancels and places at the same time"""
+        return self._post("bet/many_actions", actions)
+    
+    @wait_for_task
     def cancel_bet(self, bet_id: str, wait=False) -> None:
         """
         :param str bet_id: Bet of the form ``1.26.xxxxxxx``
         :param bool wait: Wait/Block until action has been confirmed
         """
-        resp = self._post("bet/cancel", dict(bet_id=bet_id))
-        if wait:  # pragma: no cover
-            self._wait_for_task(resp.get("task_id"))
-        return resp
+        return self._post("bet/cancel", dict(bet_id=bet_id))
 
+    @wait_for_task
     def cancel_bets(self, bet_ids: list, wait=False) -> None:
         """
         :param list bet_ids: List of bets of the form ``1.26.xxxxxxx``
         :param bool wait: Wait/Block until action has been confirmed
         """
-        resp = self._post(
+        return self._post(
             "bet/cancel_many",
             dict(bets_to_cancel=[dict(bet_id=bet_id) for bet_id in bet_ids]),
         )
-        if wait:  # pragma: no cover
-            self._wait_for_task(resp.get("task_id"))
-        return resp
 
-    def edit_bet(self, *args, **kwargs):
-        """Not yet implemented!"""
-        raise NotImplementedError
+    @wait_for_task
+    def edit_bet(self, new_bet: dict, wait=False):
+        """Edit single bet"""
+        return self._post("bet/edit", new_bet)
 
-    def edit_bets(self, *args, **kwargs):
-        """Not yet implemented!"""
-        raise NotImplementedError
+    @wait_for_task
+    def edit_bets(self, new_bets: dict, wait=False):
+        """Edit multiple bets"""
+        return self._post("bet/edit_many", new_bets)
+    
+    @wait_for_task
+    def modify_unmatched(self, bet_to_modify: dict, wait=False):
+        return self._post("bet/modify_unmatched", bet_to_modify)
+    
+    @wait_for_task
+    def modify_unmatched_many(self, bets_to_modify: dict, wait=False):
+        return self._post("bet/modify_unmatched_many", bets_to_modify)
 
     def place_bet(
         self,
@@ -269,7 +319,7 @@ class ExbetAPI:
                 0
             ]
         return resp
-
+    
     def place_bets(self, bets: list, wait=False) -> list:
         """Place multiple bets
 
@@ -330,6 +380,9 @@ class ExbetAPI:
                 selection=selection,
             ),
         )
+    
+    def find_recognized_selection(self) -> dict:
+        return self._get("find/selections/recognized")
 
     #
     # Lookup
@@ -347,16 +400,20 @@ class ExbetAPI:
 
         :param str market_id: Market id (1.24.xxxx)
         """
-        return self._post("lookup/selections", dict(market_id=market_id),).get(
-            "selections"
-        )
+        return self._post(
+            "lookup/selections",
+            dict(market_id=market_id),
+        ).get("selections")
 
     def lookup_market(self, market_id: str) -> dict:
         """Provides information about a market
 
         :param str market_id: Market  id (1.24.xxxx)
         """
-        return self._post("lookup/market", dict(market_id=market_id),)
+        return self._post(
+            "lookup/market",
+            dict(market_id=market_id),
+        )
 
     def lookup_markets(self, event_id: str) -> list:
         """
@@ -373,6 +430,9 @@ class ExbetAPI:
 
         """
         return self._post("lookup/event", dict(event_id=event_id))
+    
+    def lookup_upcoming_events(self, event_parameters: dict) -> dict:
+        return self._post("lookup/events_upcoming", event_parameters)
 
     def lookup_events(self, eventgroup_id: str) -> list:
         """List events within an event group
@@ -405,3 +465,6 @@ class ExbetAPI:
         :param str selection_id: The selection id (1.25.xxx)
         """
         return self._post("lookup/orderbook", dict(selection_id=selection_id))
+    
+    def orderbooks(self, market_ids: dict) -> dict:
+        return self._post("lookup/orderbook_many", market_ids)

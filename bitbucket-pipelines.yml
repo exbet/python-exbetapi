@@ -1,0 +1,25 @@
+image: python:3.8
+
+aliases:
+  - &ensure_environment |
+    apt-get update -yq
+    apt-get install -yq libsecp256k1-dev
+    pip3 install poetry
+    poetry install
+  - &run_poetry_test |
+    poetry run pytest
+
+run_tests_step: &run_tests_step
+  step:
+    name: Running tests through poetry
+    caches:
+      - pip
+    runs-on:
+      - 'self.hosted'
+    script:
+      - *ensure_environment
+      - *run_poetry_test
+
+pipelines:
+  default:
+    - *run_tests_step

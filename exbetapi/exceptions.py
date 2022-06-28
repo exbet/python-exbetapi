@@ -4,20 +4,16 @@
 
 
 class JsonDecodingFailedException(Exception):
-    """ Exception when decoding of server response failed
-    """
+    """Exception when decoding of server response failed"""
 
 
 class AlreadyLoggedinException(Exception):
-    """ Instance is already logged in
-    """
+    """Instance is already logged in"""
 
 
 class ExecutionError(Exception):
-    """ The execution on the API failed
-    """
+    """The execution on the API failed"""
 
 
 class APIError(Exception):
-    """ The API raised an error
-    """
+    """The API raised an error"""

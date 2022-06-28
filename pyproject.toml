@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "exbetapi"
-version = "2.1.1"
+version = "2.1.3"
 description = "Python Bindings for Trading API for exbet.io"
 authors = ["Python Development Team <py@exbet.io>"]
 homepage = "https://github.com/exbet/python-exbetapi"
@@ -13,10 +13,10 @@ documentation = "https://python-exbetapi.rtfd.io"
 [tool.poetry.dependencies]
 python = "^3.6"
 requests = "^2.22.0"
-pytest = "^5.4.1"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = "^7.0"
+coverage = {extras = ["toml"], version = "^6.2"}
 pre-commit = "^1.18"
 tox = "^3.7"
 pytest-cov = "^2.8.1"
@@ -59,3 +59,10 @@ eb = 'exbetapi.cli:main'
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.semantic_release]
+version_toml = "pyproject.toml:tool.poetry.version"
+upload_to_repository = true
+upload_to_pypi = true
+upload_to_release = true
+build_command = "pip install poetry && poetry build"

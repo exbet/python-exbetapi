@@ -1,63 +1,63 @@
-.PHONY: clean-pyc clean-build docs
 
+.PHONY: clean
 clean: clean-build clean-pyc
 
+.PHONY: clean-build
 clean-build:
-	rm -fr build/
-	rm -fr dist/
-	rm -fr *.egg-info
-	rm -fr __pycache__/ .eggs/ .cache/ .tox/ .pytest_cache/ .scannerwork/
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info
+	rm -rf __pycache__/ .eggs/ .cache/
+	rm -rf .tox/ .pytest_cache/ .benchmarks/
 
+.PHONY: clean-pyc
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 
+.PHONY: lint
 lint:
 	flake8 exbetapi/
 	pylint exbetapi/
 
+.PHONY: test
 test:
 	poetry run pytest
 
+.PHONY: tox
+tox:
+	tox
+
+.PHONY: build
 build:
 	poetry build
 
+.PHONY: install
 install: build
 	poetry install
 
+.PHONY: install-user
+install-user: build
+	python3 setup.py install --user
+
+.PHONY: git
 git:
 	git push --all
 	git push --tags
 
+.PHONY: check
 check:
 	poetry check
 
-upload:
-	twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
-
+.PHONY: docs
 docs:
 	sphinx-apidoc -d 6 -e -f -o docs exbetapi/
 	make -C docs clean html
 
-docs_store:
-	git add docs
-	-git commit -m "Updating docs/"
-
-semver: semver-release semver-updates
-
-semver-release:
-	-semversioner release
-
-semver-updates:
-	semversioner changelog > CHANGELOG.md
-	$(eval CURRENT_VERSION = $(shell semversioner current-version))
-	sed -i "s/^__version__.*/__version__ = \"$(CURRENT_VERSION)\"/" exbetapi/__init__.py
-	sed -i "s/^version.*/version = \"$(CURRENT_VERSION)\"/" pyproject.toml
-	-git add .changes exbetapi/__init__.py pyproject.toml CHANGELOG.md
-	-git commit -m "semverioner release updates" --no-verify
-	-git flow release start $(CURRENT_VERSION)
-	git flow release finish $(CURRENT_VERSION)
-
-prerelease: test docs docs_store
-release: prerelease semver clean check build upload git
+.PHONY: release
+release:
+	git diff-index --quiet HEAD || { echo "untracked files! Aborting"; exit 1; }
+	git checkout develop
+	git checkout -b release/$(shell date +'%Y%m%d')
+	git push origin release/$(shell date +'%Y%m%d')

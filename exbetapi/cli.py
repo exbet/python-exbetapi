@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 """ CLI Tools for exbetapi
 """
-
-# -*- coding: utf-8 -*-
 
 import json
 import click
@@ -205,7 +202,11 @@ def get_task(task_id):
 def find_market(sport, eventgroup, hometeam, awayteam, market, selection):
     """Find a selection"""
     api.find_selection(
-        sport, eventgroup, dict(home=hometeam, away=awayteam), market, selection,
+        sport,
+        eventgroup,
+        dict(home=hometeam, away=awayteam),
+        market,
+        selection,
     )
 
 

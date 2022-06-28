@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
 import pytest
+import requests
 from exbetapi import ExbetAPI
+from exbetapi.api import ExbetAPIAuth
 from exbetapi.exceptions import AlreadyLoggedinException
 from functools import wraps
 
@@ -25,8 +27,7 @@ def API_PROPERTY(prop, d):
 @pytest.fixture(scope="session")
 @API_POST(dict(access_token="a", refresh_token="b", username="u"))
 def api(mockery):
-    """ This api instance will be logged in (fake)
-    """
+    """This api instance will be logged in (fake)"""
     a = ExbetAPI()
     a.login("", "")
     mockery.assert_called_once_with("login", dict(username="", password=""))
@@ -34,42 +35,26 @@ def api(mockery):
 
 
 def test_init():
-    """ Ensure we can instantiate the API
-    """
+    """Ensure we can instantiate the API"""
     ExbetAPI()
 
 
-def test_no_headers():
-    assert "Authorization" not in ExbetAPI()._headers()
-
-
-def test_headers(api):
-    assert api._headers().get("Authorization") == "Bearer a"
-
-
-@unittest.mock.patch("requests.post")
-def test_post(m, api):
+def test_request_contains_version(api):
     from exbetapi import __version__
 
-    api.get_bet("1.26.0")
-    m.assert_called_once_with(
-        ExbetAPI.BASEURL + "bet/get",
-        json={"bet_id": "1.26.0"},
-        headers={
-            "Authorization": "Bearer a",
-            "User-Agent": "python/exbetapi-" + __version__,
-        },
-    )
+    assert isinstance(api._requests, requests.Session)
+    assert api._requests.headers.get("User-Agent") == "python/exbetapi-" + __version__
 
 
-@unittest.mock.patch("requests.get")
-def test_get(m, api):
-    api.account
+def test_request_contains_auth(api):
+    assert isinstance(api._requests.auth, ExbetAPIAuth)
+    r = requests.Request()
+    api._requests.auth(r)
+    assert r.headers.get("Authorization") == "Bearer a"
 
 
 def test_login(api):
-    """ Test that we are logged in
-    """
+    """Test that we are logged in"""
     assert api.is_loggedin()
 
 
@@ -126,6 +111,158 @@ def test_list_bets(mock, api):
     assert api.list_bets() == dict(matched=[], unmatched=[])
     mock.assert_called_once_with("bet/list")
 
+@API_GET(dict(recognized_ids=[]))
+def find_recognized_selection(mock, api):
+    assert api.find_recognized_selection() == dict(recognized_ids=[])
+    mock.assert_called_once_with("find/selections/recognized")
+
+@API_POST(dict(matched=[]))
+def test_list_matched(mock, api):
+    assert api.list_matched() == dict(matched=[])
+    mock.assert_called_once_with("bet/list_matched")
+
+@API_POST(dict(unmatched=[]))
+def test_list_unmatched(mock, api):
+    assert api.list_unmatched() == dict(unmatched=[])
+    mock.assert_called_once_with("bet/list_unmatched")
+
+@API_POST(dict())
+def test_many_actions(mock, api):
+    many_actions = {
+        "cancel": [
+            {
+            "bet_id": "string"
+            }
+        ],
+        "edit": [
+            {
+            "bet_id": "1.26.8911",
+            "current_backer_multiplier": 1.02,
+            "current_backer_stake_amount": 1,
+            "current_persistent": True,
+            "new_backer_multiplier": 1.03,
+            "new_backer_stake_amount": 1.01,
+            "new_persistent": True
+            }
+        ],
+        "place": [
+            {
+            "back_or_lay": "back",
+            "backer_multiplier": 1.02,
+            "backer_stake": {
+                "amount": 0,
+                "symbol": "string"
+            },
+            "expiration_time": "2022-05-17T07:33:14Z",
+            "persistent": True,
+            "selection_id": "1.25.8911"
+            }
+        ]
+    }
+    api.many_actions(many_actions)
+    mock.assert_called_once_with("bet/many_actions", many_actions)
+
+@API_POST(dict())
+def test_edit_bet(mock, api):
+    new_bet = {
+        "bet_id": "1.26.8911",
+        "current_backer_multiplier": 1.02,
+        "current_backer_stake_amount": 1,
+        "current_persistent": True,
+        "new_backer_multiplier": 1.03,
+        "new_backer_stake_amount": 1.01,
+        "new_persistent": True
+    }
+    api.edit_bet(new_bet)
+    mock.assert_called_once_with("bet/edit", new_bet)
+
+@API_POST(dict())
+def test_edit_bets(mock, api):
+    new_bets = {
+        "edit_bets": [
+            {
+                "bet_id": "1.26.8911",
+                "current_backer_multiplier": 1.02,
+                "current_backer_stake_amount": 1,
+                "current_persistent": True,
+                "new_backer_multiplier": 1.03,
+                "new_backer_stake_amount": 1.01,
+                "new_persistent": True
+            }
+        ]
+    }
+    api.edit_bets(new_bets)
+    mock.assert_called_once_with("bet/edit_many", new_bets)
+
+@API_POST(dict())
+def test_modify_unmatched(mock, api):
+    bets_to_modify = {
+        "bets": [
+            {
+            "backs": [
+                {
+                    "backer_multiplier": 1.02,
+                    "backer_stake": {
+                        "amount": 0,
+                        "symbol": "string"
+                    }
+                }
+            ],
+            "lays": [
+                {
+                    "backer_multiplier": 1.02,
+                    "backer_stake": {
+                        "amount": 0,
+                        "symbol": "string"
+                    }
+                }
+            ]
+            }
+        ],
+        "expiration_time": "2021-02-05T09:58:53Z",
+        "market_id": "1.24.8911",
+        "persistent": True,
+        "require_bmg_status": "string"
+    }
+    api.modify_unmatched(bets_to_modify)
+    mock.assert_called_once_with("bet/modify_unmatched", bets_to_modify)
+
+@API_POST(dict())
+def test_modify_unmatched(mock, api):
+    many_bets_to_modify = {
+        "markets": [
+            {
+            "bets": [
+                {
+                "backs": [
+                    {
+                    "backer_multiplier": 1.02,
+                    "backer_stake": {
+                        "amount": 0,
+                        "symbol": "string"
+                    }
+                    }
+                ],
+                "lays": [
+                    {
+                    "backer_multiplier": 1.02,
+                    "backer_stake": {
+                        "amount": 0,
+                        "symbol": "string"
+                    }
+                    }
+                ]
+                }
+            ],
+            "expiration_time": "2021-02-05T09:58:53Z",
+            "market_id": "1.24.8911",
+            "persistent": True,
+            "require_bmg_status": "string"
+            }
+        ]
+    }
+    api.modify_unmatched_many(many_bets_to_modify)
+    mock.assert_called_once_with("bet/modify_unmatched_many", many_bets_to_modify)
 
 @API_POST(dict(sports=["foobar"]))
 def test_lookup_sports(mock, api):
@@ -181,12 +318,45 @@ def test_lookup_selection(mock, api):
     assert api.lookup_selection(_id) == dict(foo="bar")
     mock.assert_called_once_with("lookup/selection", dict(selection_id=_id))
 
+@API_POST(dict(events=[]))
+def test_lookup_upcoming_events(mock, api):
+    event_parameters = {
+        "add_details": True,
+        "add_markets": False,
+        "add_prices": False,
+        "limit": 100,
+        "offset": 0,
+        "sport_id": ""
+    }
+    assert api.lookup_upcoming_events(event_parameters) == dict(events=[])
+    mock.assert_called_once_with("lookup/events_upcoming", event_parameters)
+
 
 @API_POST(dict(aggregated_back_bets=[], aggregated_lay_bets=[]))
 def test_orderbook(mock, api):
     _id = "1.25.0"
     assert api.orderbook(_id) == dict(aggregated_back_bets=[], aggregated_lay_bets=[])
     mock.assert_called_once_with("lookup/orderbook", dict(selection_id=_id))
+
+
+@API_POST(dict(markets=[dict(market_id="", selections=[dict(aggregated_back_bets=[], aggregated_lay_bets=[])])]))
+def test_orderbooks(mock, api):
+    market_ids = {"market_ids": ["1.24.0"]}
+    expected_response = {
+        "markets": [
+            {
+                "market_id": "",
+                "selections": [
+                    {
+                        "aggregated_back_bets": [],
+                        "aggregated_lay_bets": []
+                    }
+                ]
+            },
+        ]
+    }
+    assert api.orderbooks(market_ids) == expected_response
+    mock.assert_called_once_with("lookup/orderbook_many", market_ids)
 
 
 @API_POST(dict())
