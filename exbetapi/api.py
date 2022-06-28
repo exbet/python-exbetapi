@@ -204,14 +204,17 @@ class ExbetAPI:
     def roles(self) -> list:
         """Provide roles of the account"""
         return self.account.get("roles")
-    
+
     def wait_for_task(func):
         def func_wrapper(self, *args, **kwargs):
             resp = func(self, *args, **kwargs)
-            wait_kwarg = signature(func).parameters['wait'].default or kwargs.pop("wait", False)
+            wait_kwarg = signature(func).parameters["wait"].default or kwargs.pop(
+                "wait", False
+            )
             if wait_kwarg:
                 self._wait_for_task(resp.get("task_id"))
             return resp
+
         return func_wrapper
 
     #
@@ -227,20 +230,20 @@ class ExbetAPI:
     def list_bets(self) -> dict:
         """List account's bets, sorted for matched and unmatched"""
         return self._get("bet/list")
-    
+
     def list_matched(self) -> dict:
         """List account's matched bets"""
         return self._post("bet/list_matched")
-    
+
     def list_unmatched(self) -> dict:
         """List account's unmatched bets"""
         return self._post("bet/list_unmatched")
-    
+
     @wait_for_task
     def many_actions(self, actions: dict, wait=False) -> None:
         """Perform many edits, cancels and places at the same time"""
         return self._post("bet/many_actions", actions)
-    
+
     @wait_for_task
     def cancel_bet(self, bet_id: str, wait=False) -> None:
         """
@@ -269,11 +272,11 @@ class ExbetAPI:
     def edit_bets(self, new_bets: dict, wait=False):
         """Edit multiple bets"""
         return self._post("bet/edit_many", new_bets)
-    
+
     @wait_for_task
     def modify_unmatched(self, bet_to_modify: dict, wait=False):
         return self._post("bet/modify_unmatched", bet_to_modify)
-    
+
     @wait_for_task
     def modify_unmatched_many(self, bets_to_modify: dict, wait=False):
         return self._post("bet/modify_unmatched_many", bets_to_modify)
@@ -319,7 +322,7 @@ class ExbetAPI:
                 0
             ]
         return resp
-    
+
     def place_bets(self, bets: list, wait=False) -> list:
         """Place multiple bets
 
@@ -380,7 +383,7 @@ class ExbetAPI:
                 selection=selection,
             ),
         )
-    
+
     def find_recognized_selection(self) -> dict:
         return self._get("find/selections/recognized")
 
@@ -430,7 +433,7 @@ class ExbetAPI:
 
         """
         return self._post("lookup/event", dict(event_id=event_id))
-    
+
     def lookup_upcoming_events(self, event_parameters: dict) -> dict:
         return self._post("lookup/events_upcoming", event_parameters)
 
@@ -465,6 +468,6 @@ class ExbetAPI:
         :param str selection_id: The selection id (1.25.xxx)
         """
         return self._post("lookup/orderbook", dict(selection_id=selection_id))
-    
+
     def orderbooks(self, market_ids: dict) -> dict:
         return self._post("lookup/orderbook_many", market_ids)
